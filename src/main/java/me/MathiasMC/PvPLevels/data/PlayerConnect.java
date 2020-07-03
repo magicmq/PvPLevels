@@ -31,7 +31,10 @@ public class PlayerConnect {
 
     public PlayerConnect(String uuid) {
         playeruuid = uuid;
-        String[] data = PvPLevels.call.database.getValues(uuid);
+        PvPLevels.call.database.getValues(uuid);
+    }
+
+    public void playerConnectCallback(String[] data) {
         kills = Long.parseLong(data[0]);
         deaths = Long.parseLong(data[1]);
         xp = Long.parseLong(data[2]);

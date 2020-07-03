@@ -62,58 +62,57 @@ public class PvPLevels extends JavaPlugin {
         levels = new Levels(this);
         boosters = new Boosters(this);
         database = new Database(this);
+        textUtils.info("Database ( Connected )");
         new GUIFolder(this);
-        if (database.set()) {
-            textUtils.info("Database ( Connected )");
-            if (config.get.getBoolean("load-players.reload")) { database.loadOnline(); }
-            if (config.get.getBoolean("load-players.all")) { database.loadALL(); }
-            getServer().getPluginManager().registerEvents(new EntityDeath(this), this);
-            getServer().getPluginManager().registerEvents(new PlayerLogin(this), this);
-            getServer().getPluginManager().registerEvents(new PlayerQuit(this), this);
-            getServer().getPluginManager().registerEvents(new InventoryClick(this), this);
-            getServer().getPluginManager().registerEvents(new InventoryClose(this), this);
-            if (config.get.getBoolean("events.CreatureSpawn")) { getServer().getPluginManager().registerEvents(new CreatureSpawn(this), this); }
-            if (config.get.getBoolean("events.PlayerJoin")) { getServer().getPluginManager().registerEvents(new PlayerJoin(this), this); }
-            if (config.get.getBoolean("events.PlayerRespawn")) { getServer().getPluginManager().registerEvents(new PlayerRespawn(this), this); }
-            if (config.get.getBoolean("events.BlockPlace")) { getServer().getPluginManager().registerEvents(new BlockPlace(this), this); }
-            if (config.get.getBoolean("events.BlockBreak")) { getServer().getPluginManager().registerEvents(new BlockBreak(this), this); }
-            getCommand("pvplevels").setExecutor(new PvPLevels_Command(this));
-            getCommand("pvpstats").setExecutor(new PvPStats_Command(this));
-            getCommand("pvptop").setExecutor(new PvPTop_Command(this));
-            getCommand("pvpboosters").setExecutor(new PvPBoosters_Command(this));
-            getCommand("pvpprofile").setExecutor(new PvPProfile_Command(this));
-            placeholders();
-            if (config.get.getBoolean("update-check")) {
-                new UpdateUtils(this, 20807).getVersion(version -> {
-                    if (this.getDescription().getVersion().equalsIgnoreCase(version)) {
-                        textUtils.info("You are using the latest version of PvPLevels (" + PvPLevels.call.getDescription().getVersion() + ")");
-                    } else {
-                        textUtils.warning("Version: " + version + " has been released! you are currently using version: " + PvPLevels.call.getDescription().getVersion());
-                    }
-                });
-            }
-            if (config.get.getBoolean("save.use")) { systemManager.saveSchedule(); }
-            int pluginId = 1174;
-            Metrics metrics = new Metrics(this, pluginId);
-            metrics.addCustomChart(new Metrics.SimplePie("levels", () -> String.valueOf(levels.get.getConfigurationSection("levels").getKeys(false).size())));
-        } else {
-            textUtils.error("Disabling plugin cannot connect to database");
-            getServer().getPluginManager().disablePlugin(this);
+        if (config.get.getBoolean("load-players.reload")) { database.loadOnline(); }
+        if (config.get.getBoolean("load-players.all")) { database.loadALL(); }
+        getServer().getPluginManager().registerEvents(new EntityDeath(this), this);
+        getServer().getPluginManager().registerEvents(new PlayerLogin(this), this);
+        getServer().getPluginManager().registerEvents(new PlayerQuit(this), this);
+        getServer().getPluginManager().registerEvents(new InventoryClick(this), this);
+        getServer().getPluginManager().registerEvents(new InventoryClose(this), this);
+        if (config.get.getBoolean("events.CreatureSpawn")) { getServer().getPluginManager().registerEvents(new CreatureSpawn(this), this); }
+        if (config.get.getBoolean("events.PlayerJoin")) { getServer().getPluginManager().registerEvents(new PlayerJoin(this), this); }
+        if (config.get.getBoolean("events.PlayerRespawn")) { getServer().getPluginManager().registerEvents(new PlayerRespawn(this), this); }
+        if (config.get.getBoolean("events.BlockPlace")) { getServer().getPluginManager().registerEvents(new BlockPlace(this), this); }
+        if (config.get.getBoolean("events.BlockBreak")) { getServer().getPluginManager().registerEvents(new BlockBreak(this), this); }
+        getCommand("pvplevels").setExecutor(new PvPLevels_Command(this));
+        getCommand("pvpstats").setExecutor(new PvPStats_Command(this));
+        getCommand("pvptop").setExecutor(new PvPTop_Command(this));
+        getCommand("pvpboosters").setExecutor(new PvPBoosters_Command(this));
+        getCommand("pvpprofile").setExecutor(new PvPProfile_Command(this));
+        placeholders();
+        if (config.get.getBoolean("update-check")) {
+            new UpdateUtils(this, 20807).getVersion(version -> {
+                if (this.getDescription().getVersion().equalsIgnoreCase(version)) {
+                    textUtils.info("You are using the latest version of PvPLevels (" + PvPLevels.call.getDescription().getVersion() + ")");
+                } else {
+                    textUtils.warning("Version: " + version + " has been released! you are currently using version: " + PvPLevels.call.getDescription().getVersion());
+                }
+            });
         }
+        if (config.get.getBoolean("save.use")) { systemManager.saveSchedule(); }
+        int pluginId = 1174;
+        Metrics metrics = new Metrics(this, pluginId);
+        metrics.addCustomChart(new Metrics.SimplePie("levels", () -> String.valueOf(levels.get.getConfigurationSection("levels").getKeys(false).size())));
     }
 
     public void onDisable() {
-        try {
-            database.close();
-        } catch (SQLException exception) {
-            textUtils.exception(exception.getStackTrace(), exception.getMessage());
-        }
+        database.close();
         call = null;
     }
 
     public void load(String uuid) {
         PlayerConnect data = new PlayerConnect(uuid);
         playerConnect.put(uuid, data);
+    }
+
+    public void loadCallback(String uuid, String[] data) {
+        if (Bukkit.getPlayer(UUID.fromString(uuid)) != null) {
+            playerConnect.get(uuid).playerConnectCallback(data);
+        } else {
+            playerConnect.remove(uuid);
+        }
     }
 
     public void unload(String uuid) {
